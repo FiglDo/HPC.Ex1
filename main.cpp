@@ -9,7 +9,7 @@
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 
 #if defined(__APPLE__) || defined(__MACOSX)
-#include <OpenCL/cl.hpp>
+#include "cl.hpp"
 #else
 #include <CL/cl.hpp>
 #endif
@@ -20,13 +20,21 @@
 
 int  main(void)
 {
-
-const std::string KERNEL_FILE = "kernel.cl";
+    
+#if defined(__APPLE__) || defined(__MACOSX)
+    const std::string KERNEL_FILE = "./kernel.cl";
+#else
+    const std::string KERNEL_FILE = "kernel.cl";
+#endif
 cl_int err = CL_SUCCESS;
 cl::Program program;
 std::vector<cl::Device> devices;
+    int platformNr = 0;
 
 try {
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+        fprintf(stdout, "Current working dir: %s\n", cwd);
 	
 	// get available platforms ( NVIDIA, Intel, AMD,...)
 	std::vector<cl::Platform> platforms;
@@ -37,11 +45,11 @@ try {
 	}
 		
 	// create a context and get available devices
-	cl::Platform platform = platforms[1]; // on a different machine, you may have to select a different platform
+	cl::Platform platform = platforms[platformNr]; // on a different machine, you may have to select a different platform
 	cl_context_properties properties[] =
-		{ CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[1])(), 0 };
-	//cl::Context context(CL_DEVICE_TYPE_GPU, properties);
-	cl::Context context(CL_DEVICE_TYPE_CPU, properties);
+		{ CL_CONTEXT_PLATFORM, (cl_context_properties)(platforms[platformNr])(), 0 };
+	cl::Context context(CL_DEVICE_TYPE_GPU, properties);
+	//cl::Context context(CL_DEVICE_TYPE_CPU, properties);
 			
 	devices = context.getInfo<CL_CONTEXT_DEVICES>();
 			
