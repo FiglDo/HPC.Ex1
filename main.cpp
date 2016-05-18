@@ -23,19 +23,17 @@ int  main(void)
     
 #if defined(__APPLE__) || defined(__MACOSX)
     const std::string KERNEL_FILE = "./kernel.cl";
+    int platformNr = 0;
 #else
     const std::string KERNEL_FILE = "kernel.cl";
+    int platformNr = 1;
 #endif
 cl_int err = CL_SUCCESS;
 cl::Program program;
 std::vector<cl::Device> devices;
-    int platformNr = 0;
+    
 
 try {
-    char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) != NULL)
-        fprintf(stdout, "Current working dir: %s\n", cwd);
-	
 	// get available platforms ( NVIDIA, Intel, AMD,...)
 	std::vector<cl::Platform> platforms;
 	cl::Platform::get(&platforms);
