@@ -38,6 +38,9 @@ __kernel void image_rotate(
 		float xpos = (( ((float) ix - (float)centerX)*cosTheta + ((float)iy - (float) centerY)*sinTheta) + centerX); 
 		float ypos = (( ((float) ix - (float)centerX)*sinTheta + ((float)iy - (float) centerY)*cosTheta) + centerY);
 
+		xpos = floor(xpos);
+		ypos = floor(ypos);
+
 		if ((((int)xpos>=0) && ((int)xpos< W)) && ( ((int)ypos>=0) && ((int)ypos< H)) )
 		{
 			//Read (xpos,ypos) src_data and store at (ix,iy) in dest_data 
