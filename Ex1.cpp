@@ -105,7 +105,7 @@ int Ex1::Ex1_main()
 		cl_int clHeight = img->height;
 
 		double degree;
-		degree = 62.0;
+		degree = 231.0;
 
 		float sintheta = 0.0;
 		sintheta = sin(degree*PI / 180);
