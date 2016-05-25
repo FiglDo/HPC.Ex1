@@ -14,7 +14,7 @@
 #include <CL/cl.hpp>
 #endif
 #include "Ex1.h"
-#include "tga/tga.h"
+#include "tga.h"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -23,77 +23,12 @@
 
 #define PI 3.14159265
 
-/*
-int mainASDF(void)
-{
-
-#if defined(__APPLE__) || defined(__MACOSX)
-	const std::string KERNEL_FILE = "./kernel.cl";
-	int platformNr = 0;
-#else
-	const std::string KERNEL_FILE = "kernel.cl";
-	int platformNr = 1;
-#endif
-
-
-	//http://simpleopencl.blogspot.co.at/2013/06/tutorial-simple-start-with-opencl-and-c.html
-	//get all platforms (drivers)
-	std::vector<cl::Platform> all_platforms;
-	cl::Platform::get(&all_platforms);
-	if (all_platforms.size() == 0){
-		std::cout << " No platforms found. Check OpenCL installation!\n";
-		exit(1);
-	}
-	cl::Platform default_platform = all_platforms[0];
-	std::cout << "Using platform: " << default_platform.getInfo<CL_PLATFORM_NAME>() << "\n";
-
-	//get default device of the default platform
-	std::vector<cl::Device> all_devices;
-	default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-	if (all_devices.size() == 0){
-		std::cout << " No devices found. Check OpenCL installation!\n";
-		exit(1);
-	}
-	cl::Device default_device = all_devices[platformNr];
-	std::cout << "Using device: " << default_device.getInfo<CL_DEVICE_NAME>() << "\n";
-
-	cl::Context context({ default_device });
-
-	cl::Program::Sources sources;
-
-	// load and build the kernel
-	std::ifstream sourceFile(KERNEL_FILE);
-	std::string sourceCode(
-		std::istreambuf_iterator<char>(sourceFile),
-		(std::istreambuf_iterator<char>()));
-	cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length() + 1));
-	cl::Program program(context, sources);
-
-	if (program.build({ default_device }) != CL_SUCCESS){
-		std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device) << "\n";
-		exit(1);
-	}
-
-	tga::TGAImage* img = new tga::TGAImage();
-	tga::LoadTGA(img, "lenna.tga");
-
-	size_t _size = img->imageData.size() * sizeof(unsigned char);
-
-	cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, _size);
-	cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, _size);
-
-	//cl::make_kernel test(cl::Kernel(program, "simple_add"));
-	//cl::EnqueueArgs eargs(queue, cl::NullRange, cl::NDRange(10), cl::NullRange);
-	//simple_add(eargs, buffer_A, buffer_B, buffer_C).wait();
-}
-*/
-
 
 int Ex1::Ex1_main()
 {
 
 #if defined(__APPLE__) || defined(__MACOSX)
-	const std::string KERNEL_FILE = "./kernel.cl";
+	const std::string KERNEL_FILE = "./Ex1_kernel.cl";
 	int platformNr = 0;
 #else
 	const std::string KERNEL_FILE = "Ex1_kernel.cl";
