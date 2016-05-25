@@ -35,7 +35,7 @@ __kernel void image_rotate(
 		const int centerY = (int) (H/2);
 		
 		//Calculate location of data to move into ix and iy– Output decomposition as mentioned 
-		float xpos = (( ((float) ix - (float)centerX)*cosTheta + ((float)iy - (float) centerY)*sinTheta) + centerX); 
+		float xpos = (( ((float) ix - (float)centerX)*cosTheta - ((float)iy - (float) centerY)*sinTheta) + centerX);
 		float ypos = (( ((float) ix - (float)centerX)*sinTheta + ((float)iy - (float) centerY)*cosTheta) + centerY);
 
 		xpos = floor(xpos);

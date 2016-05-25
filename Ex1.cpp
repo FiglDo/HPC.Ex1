@@ -14,7 +14,7 @@
 #include <CL/cl.hpp>
 #endif
 #include "Ex1.h"
-#include "tga.h"
+#include "tga/tga.h"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
