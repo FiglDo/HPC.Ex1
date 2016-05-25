@@ -22,6 +22,7 @@ __kernel void vector_add(
 	C[i] = A[i] + B[i];
 }
 
+
 __kernel void image_rotate( 
 	__global unsigned char * src_data, __global unsigned char * dest_data, 	//Data in global memory
 	int W, int H,  							//Image Dimensions 
@@ -35,11 +36,16 @@ __kernel void image_rotate(
 		const int centerY = (int) (H/2);
 		
 		//Calculate location of data to move into ix and iy– Output decomposition as mentioned 
-		float xpos = (( ((float) ix - (float)centerX)*cosTheta + ((float)iy - (float) centerY)*sinTheta) + centerX); 
+		float xpos = (( ((float) ix - (float)centerX)*cosTheta - ((float)iy - (float) centerY)*sinTheta) + centerX); 
 		float ypos = (( ((float) ix - (float)centerX)*sinTheta + ((float)iy - (float) centerY)*cosTheta) + centerY);
 
+		
 		xpos = floor(xpos);
 		ypos = floor(ypos);
+		
+		//printf("(ix: %d, iy:%d) - (%f,%f)",ix,iy, xpos, ypos);
+		//printf(" - floored (%f,%f)\n", xpos, ypos);
+		
 
 		if ((((int)xpos>=0) && ((int)xpos< W)) && ( ((int)ypos>=0) && ((int)ypos< H)) )
 		{
