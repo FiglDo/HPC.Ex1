@@ -92,7 +92,7 @@ int Ex2::Ex2_main()
 		cl::Buffer bufferSource = cl::Buffer(context, CL_MEM_READ_ONLY, _size);
 		// output buffers
 		cl::Buffer bufferDest = cl::Buffer(context, CL_MEM_WRITE_ONLY, _size);
-		cl::Buffer bufferTemp = cl::Buffer(context, CL_MEM_READ_WRITE, _size_temp);
+		cl::Buffer bufferTemp = cl::Buffer(context, CL_MEM_READ_WRITE, _size_temp);  //fuer global
 
 		// fill buffers
 		queue.enqueueWriteBuffer(
@@ -102,21 +102,21 @@ int Ex2::Ex2_main()
 			_size, // size of write 
 			&(input[0])); // pointer to input
 
-		cl::Kernel rotateKernel(program, "scan", &err);
-		rotateKernel.setArg(0, bufferDest);
-		rotateKernel.setArg(1, bufferSource);
-		rotateKernel.setArg(2, bufferTemp);
+		cl::Kernel scanKernel(program, "scan", &err);
+		scanKernel.setArg(0, bufferDest);
+		scanKernel.setArg(1, bufferSource);
+		scanKernel.setArg(2, bufferTemp);
+		//scanKernel.setArg(2, _size_temp, NULL);
 		//rotateKernel.setArg(3, sizeOfInput);
 
 		// launch add kernel
 		// Run the kernel on specific ND range
-		// todo was machen diese 2???
-		cl::NDRange global(sizeOfInput);
-		cl::NDRange local(sizeOfInput); //make sure local range is divisible by global range
-		cl::NDRange offset(0);
+		cl::NDRange global(sizeOfInput); //global => von bis ueber die ganze Range des Arrays
+		cl::NDRange local(4); //unterteilung des global in workgroups => make sure local range is divisible by global range
+		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
 
 		std::cout << "call 'scan' kernel" << std::endl;
-		queue.enqueueNDRangeKernel(rotateKernel, offset, global, local);
+		queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
 
 		// read back result
 		queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
