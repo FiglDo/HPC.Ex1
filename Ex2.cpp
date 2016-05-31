@@ -92,7 +92,7 @@ int Ex2::Ex2_main()
 		cl::Buffer bufferSource = cl::Buffer(context, CL_MEM_READ_ONLY, _size);
 		// output buffers
 		cl::Buffer bufferDest = cl::Buffer(context, CL_MEM_WRITE_ONLY, _size);
-		cl::Buffer bufferTemp = cl::Buffer(context, CL_MEM_READ_ONLY, _size_temp);
+		cl::Buffer bufferTemp = cl::Buffer(context, CL_MEM_READ_WRITE, _size_temp);
 
 		// fill buffers
 		queue.enqueueWriteBuffer(
@@ -103,14 +103,15 @@ int Ex2::Ex2_main()
 			&(input[0])); // pointer to input
 
 		cl::Kernel rotateKernel(program, "scan", &err);
-		rotateKernel.setArg(0, bufferSource);
-		rotateKernel.setArg(1, bufferDest);
+		rotateKernel.setArg(0, bufferDest);
+		rotateKernel.setArg(1, bufferSource);
 		rotateKernel.setArg(2, bufferTemp);
+		//rotateKernel.setArg(3, sizeOfInput);
 
 		// launch add kernel
 		// Run the kernel on specific ND range
-		cl::NDRange global(_size);
-		cl::NDRange local(1); //make sure local range is divisible by global range
+		cl::NDRange global(sizeOfInput);
+		cl::NDRange local(sizeOfInput); //make sure local range is divisible by global range
 		cl::NDRange offset(0);
 
 		std::cout << "call 'scan' kernel" << std::endl;
@@ -119,9 +120,14 @@ int Ex2::Ex2_main()
 		// read back result
 		queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
 
-		for (size_t i = 0; i < _size; i++)
+
+		std::cout << std::endl << "RESULT:" << std::endl;
+		std::cout << "INPUT vs. OUTPUT" << std::endl;
+
+		for (size_t i = 0; i < sizeOfInput
+			; i++)
 		{
-			std::cout << output[i] << std::endl;
+			std::cout << "    " << input[i] << "     " << output[i] << std::endl;
 		}
 
 	}
@@ -143,7 +149,7 @@ int Ex2::Ex2_main()
 			<< std::endl;
 	}
 
-	//std::cin.get();
+	std::cin.get();
 
 	return EXIT_SUCCESS;
 
