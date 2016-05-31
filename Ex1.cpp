@@ -101,11 +101,8 @@ int Ex1::Ex1_main()
 		// output buffers
 		cl::Buffer bufferDest = cl::Buffer(context, CL_MEM_WRITE_ONLY, _size);
 
-		cl_int clWidth = img->width;
-		cl_int clHeight = img->height;
-
 		double degree;
-		degree = 231.0;
+		degree = 33.0;
 
 		float sintheta = 0.0;
 		sintheta = sin(degree*PI / 180);
