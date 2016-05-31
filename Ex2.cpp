@@ -110,6 +110,7 @@ int Ex2::Ex2_main()
 
 		// launch add kernel
 		// Run the kernel on specific ND range
+		// todo was machen diese 2???
 		cl::NDRange global(sizeOfInput);
 		cl::NDRange local(sizeOfInput); //make sure local range is divisible by global range
 		cl::NDRange offset(0);
