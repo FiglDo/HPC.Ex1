@@ -78,7 +78,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 	//temp[thid] = 0;
 	//temp[n+thid] = 0;
 	
-	temp[pout*wgsize + localid] = (localid > 0) ? g_idata[localid - 1] : 0;
+	temp[pout*wgsize + localid] = (localid > 0) ? g_idata[thid - 1] : 0;
 	
 	barrier(CLK_LOCAL_MEM_FENCE );
 
@@ -123,7 +123,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 	{
 		//printf("\n\tgroupid: %d, value: %d\n",groupid,temp[pout*n+thid]);
 
-		bsum[groupid] = temp[pout*wgsize + localid] + g_idata[thid - 1];
+		bsum[groupid] = temp[pout*wgsize + localid] + g_idata[thid];
 	}
 }
 
