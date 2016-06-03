@@ -81,12 +81,12 @@ int Ex2::Ex2_main()
 		cl::CommandQueue queue(context, devices[0], 0, &err);
 
 		//create input and output data
-		int input[] = { 3, 1, 7, 0, 4, 1, 6, 3 };
+		cl_int input[] = { 3, 1, 7, 0, 4, 1, 6, 3 };
 		const int sizeOfInput = sizeof(input) / sizeof(input[0]);
-		int output[sizeOfInput] = {};
+		cl_int output[sizeOfInput] = {};
 
-		size_t _size = sizeOfInput * sizeof(int);
-		size_t _size_temp = sizeOfInput * 2 * sizeof(int);
+		int _size = sizeOfInput * sizeof(cl_int);
+		int _size_temp = sizeOfInput * 90 * sizeof(cl_int);
 
 		// input buffers
 		cl::Buffer bufferSource = cl::Buffer(context, CL_MEM_READ_ONLY, _size);
@@ -105,8 +105,8 @@ int Ex2::Ex2_main()
 		cl::Kernel scanKernel(program, "scan", &err);
 		scanKernel.setArg(0, bufferDest);
 		scanKernel.setArg(1, bufferSource);
-		scanKernel.setArg(2, bufferTemp);
-		//scanKernel.setArg(2, _size_temp, NULL);
+		//scanKernel.setArg(2, bufferTemp);
+		scanKernel.setArg(2, _size_temp, NULL);
 		//rotateKernel.setArg(3, sizeOfInput);
 
 		// launch add kernel
