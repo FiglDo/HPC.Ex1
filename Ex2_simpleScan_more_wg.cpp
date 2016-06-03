@@ -238,9 +238,6 @@ int PerformAgg(string kernelName, OpenClContainer container, vector<cl_int> inpu
 		cl::Buffer bufferDest = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _size);
 		cl::Buffer bufferBSum = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size_sum);
 
-
-
-
 		// fill buffers
 		container.queue.enqueueWriteBuffer(
 			bufferSource, // which buffer to write to
@@ -256,10 +253,12 @@ int PerformAgg(string kernelName, OpenClContainer container, vector<cl_int> inpu
 			_size_sum, // size of write 
 			&(sum[0])); // pointer to input
 
+
 		cl::Kernel scanKernel(container.program, "scan_agg", &err);
 		scanKernel.setArg(0, bufferDest);
 		scanKernel.setArg(1, bufferSource);
 		scanKernel.setArg(2, bufferBSum);
+		scanKernel.setArg(3, sum.size());
 
 
 		std::cout << "call 'scan' kernel" << std::endl;
@@ -352,7 +351,7 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 
 	int sizeOfInput = input.size();
 	vector<cl_int> output = vector<cl_int>(sizeOfInput);
-	int workGroupSplit = 8;
+	int workGroupSplit = 4;
 
 	int sizeOfSum = (sizeOfInput / workGroupSplit);
 	int _size_sum = sizeOfSum * sizeof(cl_int);

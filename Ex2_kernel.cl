@@ -127,11 +127,11 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 	}
 }
 
-__kernel void scan_agg(int *g_odata, int *g_idata, int * sums)
+__kernel void scan_agg(int *g_odata, int *g_idata, int * sums, int sos)
 {
 	int thid = get_global_id(0);
 	int n = get_global_size(0);
-	int sos = sizeof(sums);// / sizeof(sums[0]);
+	//int sos = sizeof(sums);// / sizeof(sums[0]);
 	int index = (int)( thid / (n/sos));
 
 	printf("thid: %d, index: %d, sos: %d, calc: %d\n", thid, index, sos, sizeof(sums) / sizeof(sums[0]));
