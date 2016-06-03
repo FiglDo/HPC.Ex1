@@ -1,5 +1,6 @@
 #include "Ex2_seq.h"
 
+using namespace std;
 
 int Ex2_seq::Ex2_seq_main()
 {

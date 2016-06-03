@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <ctime>
 
 using namespace std;
 
@@ -328,18 +329,30 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	//input.push_back(1);
 	//input.push_back(1);
 
-	input.push_back(3);
-	input.push_back(1);
-	input.push_back(7);
-	input.push_back(0);
-	input.push_back(4);
-	input.push_back(1);
-	input.push_back(6);
-	input.push_back(3);
+	//input.push_back(3);
+	//input.push_back(1);
+	//input.push_back(7);
+	//input.push_back(0);
+	//input.push_back(4);
+	//input.push_back(1);
+	//input.push_back(6);
+	//input.push_back(3);
+
+	srand(time(0));
+	int target = 0;
+	int value = 0;
+	for (int i = 0; i < 16; i++)
+	{
+		value = rand() % 2;
+		input.push_back(value);
+		target += value;
+	}
+	
+	target -= value;
 
 	int sizeOfInput = input.size();
 	vector<cl_int> output = vector<cl_int>(sizeOfInput);
-	int workGroupSplit = 4;
+	int workGroupSplit = 8;
 
 	int sizeOfSum = (sizeOfInput / workGroupSplit);
 	int _size_sum = sizeOfSum * sizeof(cl_int);
@@ -374,6 +387,9 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	vector<cl_int> output3 = vector<cl_int>(sizeOfInput);
 	retVal = PerformAgg("scan_agg", container, output, output3, output2);
 	PrintInputVsOutput(input, output3);
+	
+	cout << endl << endl << "TARGET: " << target << endl;
+
 	cin.get();
 
 	return retVal;

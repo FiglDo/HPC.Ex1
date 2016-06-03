@@ -131,8 +131,11 @@ __kernel void scan_agg(int *g_odata, int *g_idata, int * sums)
 {
 	int thid = get_global_id(0);
 	int n = get_global_size(0);
-	int sos = sizeof(sums) / 2;// / sizeof(sums[0]);
-
+	int sos = sizeof(sums);// / sizeof(sums[0]);
 	int index = (int)( thid / (n/sos));
+
+	printf("thid: %d, index: %d, sos: %d, calc: %d\n", thid, index, sos, sizeof(sums) / sizeof(sums[0]));
+
+
 	g_odata[thid] = g_idata[thid] + sums[index];
 }
