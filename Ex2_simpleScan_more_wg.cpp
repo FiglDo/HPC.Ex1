@@ -13,15 +13,16 @@
 #else
 #include <CL/cl.hpp>
 #endif
-#include "Ex2.h"
+#include "Ex2_simpleScan_more_wg.h"
 #include "tga/tga.h"
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
 
+using namespace std;
 
-int Ex2::Ex2_main()
+int Ex2_simpleScan_more_wg::Ex2_main()
 {
 
 #if defined(__APPLE__) || defined(__MACOSX)
@@ -75,24 +76,64 @@ int Ex2::Ex2_main()
 		}
 
 		//create kernels
-		cl::Kernel kernel(program, "scan", &err);
+		cl::Kernel kernel(program, "scan_local", &err);
 		cl::Event event;
 
 		cl::CommandQueue queue(context, devices[0], 0, &err);
 
 		//create input and output data
-		cl_int input[] = { 3, 1, 7, 0, 4, 1, 6, 3 };
-		const int sizeOfInput = sizeof(input) / sizeof(input[0]);
-		cl_int output[sizeOfInput] = {};
+
+		vector<cl_int> input = vector<cl_int>();
+		input.push_back(1);
+		input.push_back(1);
+		input.push_back(1);
+		input.push_back(1);
+		input.push_back(1);
+		input.push_back(1);
+		input.push_back(1);
+		input.push_back(1);
+
+		//input.push_back(3);
+		//input.push_back(1);
+		//input.push_back(7);
+		//input.push_back(0);
+		//input.push_back(4);
+		//input.push_back(1);
+		//input.push_back(6);
+		//input.push_back(3);
+
+		int sizeOfInput = input.size();
+
+		vector<cl_int> output = vector<cl_int>(sizeOfInput);
+		
+		//cl_int input[] = { 3, 1, 7, 0, 4, 1, 6, 3 };
+		//const int sizeOfInput = sizeof(input) / sizeof(input[0]);
+		//cl_int output[sizeOfInput] = {};
 
 		int _size = sizeOfInput * sizeof(cl_int);
-		int _size_temp = sizeOfInput * 90 * sizeof(cl_int);
+		int _size_temp = sizeOfInput * 20 * sizeof(cl_int);
+		
+		int workGroupSplit = 4;
+
+		// launch add kernel
+		// Run the kernel on specific ND range
+		cl::NDRange global(sizeOfInput); //global => von bis ueber die ganze Range des Arrays
+		cl::NDRange local(workGroupSplit); //unterteilung des global in workgroups => make sure local range is divisible by global range
+		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
+
+
+		int sizeOfSum = (sizeOfInput / workGroupSplit);
+		int _size_sum = sizeOfSum * sizeof(cl_int);
 
 		// input buffers
 		cl::Buffer bufferSource = cl::Buffer(context, CL_MEM_READ_ONLY, _size);
 		// output buffers
 		cl::Buffer bufferDest = cl::Buffer(context, CL_MEM_WRITE_ONLY, _size);
 		cl::Buffer bufferTemp = cl::Buffer(context, CL_MEM_READ_WRITE, _size_temp);  //fuer global
+		cl::Buffer bufferBSum = cl::Buffer(context, CL_MEM_WRITE_ONLY, _size_sum);
+
+		vector<cl_int> sum = vector<cl_int>(sizeOfSum);
+
 
 		// fill buffers
 		queue.enqueueWriteBuffer(
@@ -102,25 +143,21 @@ int Ex2::Ex2_main()
 			_size, // size of write 
 			&(input[0])); // pointer to input
 
-		cl::Kernel scanKernel(program, "scan", &err);
+		cl::Kernel scanKernel(program, "scan_local", &err);
 		scanKernel.setArg(0, bufferDest);
 		scanKernel.setArg(1, bufferSource);
 		//scanKernel.setArg(2, bufferTemp);
 		scanKernel.setArg(2, _size_temp, NULL);
 		//rotateKernel.setArg(3, sizeOfInput);
+		scanKernel.setArg(3, bufferBSum);
 
-		// launch add kernel
-		// Run the kernel on specific ND range
-		cl::NDRange global(sizeOfInput); //global => von bis ueber die ganze Range des Arrays
-		cl::NDRange local(4); //unterteilung des global in workgroups => make sure local range is divisible by global range
-		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
 
 		std::cout << "call 'scan' kernel" << std::endl;
 		queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
 
 		// read back result
 		queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
-
+		queue.enqueueReadBuffer(bufferBSum, CL_TRUE, 0, _size_sum, &(sum[0]));
 
 		std::cout << std::endl << "RESULT:" << std::endl;
 		std::cout << "INPUT vs. OUTPUT" << std::endl;
@@ -129,6 +166,14 @@ int Ex2::Ex2_main()
 			; i++)
 		{
 			std::cout << "    " << input[i] << "     " << output[i] << std::endl;
+		}
+
+		std::cout << std::endl << std::endl << "Block Sums:" << endl;
+
+		for (size_t i = 0; i < sizeOfSum
+			; i++)
+		{
+			std::cout << "    " << sum[i] << std::endl;
 		}
 
 	}
@@ -150,9 +195,14 @@ int Ex2::Ex2_main()
 			<< std::endl;
 	}
 
-	std::cin.get();
+	cin.get();
 
 	return EXIT_SUCCESS;
+
+}
+
+void PerformScan()
+{
 
 }
 
