@@ -139,7 +139,8 @@ int PerformScan(string kernelName, OpenClContainer container, int workGroupSplit
 	//cl_int output[sizeOfInput] = {};
 
 	int _size = sizeOfInput * sizeof(cl_int);
-	int _size_temp = sizeOfInput * 20 * sizeof(cl_int);
+	//int _size_temp = sizeOfInput * 20 * sizeof(cl_int);
+	int _size_temp = sizeOfInput / workGroupSplit * 2 * sizeof(cl_int);
 
 	// launch add kernel
 	// Run the kernel on specific ND range
@@ -184,7 +185,87 @@ int PerformScan(string kernelName, OpenClContainer container, int workGroupSplit
 	// read back result
 	container.queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
 	container.queue.enqueueReadBuffer(bufferBSum, CL_TRUE, 0, _size_sum, &(sum[0]));
-	
+
+	}
+	catch (cl::Error err) {
+		// error handling
+		// if the kernel has failed to compile, print the error log
+		std::string s;
+		container.program.getBuildInfo(container.device, CL_PROGRAM_BUILD_LOG, &s);
+		std::cout << s << std::endl;
+		container.program.getBuildInfo(container.device, CL_PROGRAM_BUILD_OPTIONS, &s);
+		std::cout << s << std::endl;
+
+		std::cerr
+			<< "ERROR: "
+			<< err.what()
+			<< "("
+			<< err.err()
+			<< ")"
+			<< std::endl;
+	}
+
+	return EXIT_SUCCESS;
+
+
+}
+
+
+int PerformAgg(string kernelName, OpenClContainer container, vector<cl_int> input, vector<cl_int>& output, vector<cl_int> sum)
+{
+	cl_int err = CL_SUCCESS;
+
+	try
+	{
+		int sizeOfInput = input.size();
+
+		int _size = sizeOfInput * sizeof(cl_int);
+
+		// launch add kernel
+		// Run the kernel on specific ND range
+		cl::NDRange global(sizeOfInput); //global => von bis ueber die ganze Range des Arrays
+		cl::NDRange local(sizeOfInput); //unterteilung des global in workgroups => make sure local range is divisible by global range
+		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
+
+
+		int sizeOfSum = sum.size();
+		int _size_sum = sizeOfSum * sizeof(cl_int);
+
+		// input buffers
+		cl::Buffer bufferSource = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size);
+		// output buffers
+		cl::Buffer bufferDest = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _size);
+		cl::Buffer bufferBSum = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size_sum);
+
+
+
+
+		// fill buffers
+		container.queue.enqueueWriteBuffer(
+			bufferSource, // which buffer to write to
+			CL_TRUE, // block until command is complete
+			0, // offset
+			_size, // size of write 
+			&(input[0])); // pointer to input
+
+		container.queue.enqueueWriteBuffer(
+			bufferBSum, // which buffer to write to
+			CL_TRUE, // block until command is complete
+			0, // offset
+			_size_sum, // size of write 
+			&(sum[0])); // pointer to input
+
+		cl::Kernel scanKernel(container.program, "scan_agg", &err);
+		scanKernel.setArg(0, bufferDest);
+		scanKernel.setArg(1, bufferSource);
+		scanKernel.setArg(2, bufferBSum);
+
+
+		std::cout << "call 'scan' kernel" << std::endl;
+		container.queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
+
+		// read back result
+		container.queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
 
 	}
 	catch (cl::Error err) {
@@ -238,23 +319,23 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	//create input and output data
 
 	vector<cl_int> input = vector<cl_int>();
-	input.push_back(1);
-	input.push_back(1);
-	input.push_back(1);
-	input.push_back(1);
-	input.push_back(1);
-	input.push_back(1);
-	input.push_back(1);
-	input.push_back(1);
+	//input.push_back(1);
+	//input.push_back(1);
+	//input.push_back(1);
+	//input.push_back(1);
+	//input.push_back(1);
+	//input.push_back(1);
+	//input.push_back(1);
+	//input.push_back(1);
 
-	//input.push_back(3);
-	//input.push_back(1);
-	//input.push_back(7);
-	//input.push_back(0);
-	//input.push_back(4);
-	//input.push_back(1);
-	//input.push_back(6);
-	//input.push_back(3);
+	input.push_back(3);
+	input.push_back(1);
+	input.push_back(7);
+	input.push_back(0);
+	input.push_back(4);
+	input.push_back(1);
+	input.push_back(6);
+	input.push_back(3);
 
 	int sizeOfInput = input.size();
 	vector<cl_int> output = vector<cl_int>(sizeOfInput);
@@ -290,7 +371,9 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 
 	PrintInputVsOutput(sum, output2);
 	//PrintBSum(sum2);
-
+	vector<cl_int> output3 = vector<cl_int>(sizeOfInput);
+	retVal = PerformAgg("scan_agg", container, output, output3, output2);
+	PrintInputVsOutput(input, output3);
 	cin.get();
 
 	return retVal;
