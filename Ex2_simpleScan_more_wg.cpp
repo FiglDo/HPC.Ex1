@@ -33,7 +33,7 @@ public:
 
 
 
-int InitOpenCL(string kernelName, OpenClContainer& container)
+int InitOpenCL(OpenClContainer& container)
 {
 #if defined(__APPLE__) || defined(__MACOSX)
 	const std::string KERNEL_FILE = "./Ex2_kernel.cl";
@@ -90,9 +90,7 @@ int InitOpenCL(string kernelName, OpenClContainer& container)
 			//std::cout << " Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices) << "\n";
 			exit(1);
 		}
-
-		//create kernels
-		cl::Kernel kernel(program, "scan_local", &err);
+		
 		cl::Event event;
 
 		cl::CommandQueue queue(context, devices[0], 0, &err);
@@ -212,6 +210,27 @@ int PerformScan(string kernelName, OpenClContainer container, int workGroupSplit
 
 }
 
+void PrintInputVsOutput(vector<cl_int> input, vector<cl_int> output)
+{
+	//std::cout << std::endl << "RESULT:" << std::endl;
+	std::cout << endl << "INPUT vs. OUTPUT" << std::endl;
+
+	for (size_t i = 0; i < input.size(); i++)
+	{
+		std::cout << "    " << input[i] << "     " << output[i] << std::endl;
+	}
+}
+
+void PrintBSum(vector<cl_int> sum)
+{
+	std::cout << std::endl << std::endl << "Block Sums:" << endl;
+
+	for (size_t i = 0; i < sum.size(); i++)
+	{
+		std::cout << "    " << sum[i] << std::endl;
+	}
+}
+
 
 int Ex2_simpleScan_more_wg::Ex2_main()
 {
@@ -252,30 +271,25 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	int retVal;
 
 	//init OPEN CL
-	retVal = InitOpenCL(kernelName,container);
+	retVal = InitOpenCL(container);
 
 	//Scan 1
 	retVal = PerformScan(kernelName, container, workGroupSplit, input, output, sum);
+
+	PrintInputVsOutput(input, output);
+	PrintBSum(sum);
+
+	int workGroupSplit2 = sum.size();
+	vector<cl_int> sum2 = vector<cl_int>(sum.size());
+	vector<cl_int> output2 = vector<cl_int>(sum.size());
 	
+	cout << endl << endl;
+
 	//Scan 2
+	retVal = PerformScan(kernelName, container, workGroupSplit2, sum, output2, sum2);
 
-
-	std::cout << std::endl << "RESULT:" << std::endl;
-	std::cout << "INPUT vs. OUTPUT" << std::endl;
-
-	for (size_t i = 0; i < sizeOfInput
-		; i++)
-	{
-		std::cout << "    " << input[i] << "     " << output[i] << std::endl;
-	}
-
-	std::cout << std::endl << std::endl << "Block Sums:" << endl;
-
-	for (size_t i = 0; i < sizeOfSum
-		; i++)
-	{
-		std::cout << "    " << sum[i] << std::endl;
-	}
+	PrintInputVsOutput(sum, output2);
+	//PrintBSum(sum2);
 
 	cin.get();
 

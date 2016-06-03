@@ -69,7 +69,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 	//printf("thid: %d, n:%d  ",thid,n);
 	//printf("lid: %d, l:%d\n",localid,l);
 	
-	printf("thid: %d, n:%d | lId: %d, lsize:%d | groupID: %d \n",thid,n,localid,l, groupid);
+	//printf("thid: %d, n:%d | lId: %d, lsize:%d | groupID: %d \n",thid,n,localid,l, groupid);
 	
 	int pout = 0, pin = 1;  
 	// Load input into shared memory.  
@@ -111,7 +111,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 
 	if(localid == (l-1))
 	{
-		printf("\n\tgroupid: %d, value: %d\n",groupid,temp[pout*n+thid]);
+		//printf("\n\tgroupid: %d, value: %d\n",groupid,temp[pout*n+thid]);
 
 		bsum[groupid] = temp[pout*n+thid] + g_idata[thid-1];
 	}
