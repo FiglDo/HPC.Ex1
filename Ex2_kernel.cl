@@ -111,7 +111,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 
 	if(localid == (l-1))
 	{
-		printf("\n\tgroupid: %d, value: %d",groupid,temp[pout*n+thid]);
+		printf("\n\tgroupid: %d, value: %d\n",groupid,temp[pout*n+thid]);
 
 		bsum[groupid] = temp[pout*n+thid] + g_idata[thid-1];
 	}
