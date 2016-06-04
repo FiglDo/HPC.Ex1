@@ -306,9 +306,6 @@ int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input)
 	std::clock_t c_start = std::clock();
 	auto t_start = std::chrono::high_resolution_clock::now();
 
-	srand(time(0));
-	
-
 	int sizeOfInput = input.size();
 	vector<cl_int> output = vector<cl_int>(sizeOfInput);
 	int amountOfWorkGroups = 256;

@@ -37,19 +37,21 @@ int main(void)
 	int targetScan = 0;
 	int targetFilterCount = 0;
 	int value = 0;
-	
+	srand(time(0));
+
 	//for (int i = 0; i < (1024 * 16); i++)
-	for (int i = 0; i < 64; i++)
+	for (int i = 0; i < (1024 * 16)-1; i++)
 	{
-		value = rand() % 10;
+		value = rand() % 50;
 		input.push_back(value);
 		targetScan += value;
 
-		if (value < 5)
+		if (value < 20)
 		{
 			targetFilterCount += 1;
 		}
 	}
+
 
 	targetScan -= value;
 	

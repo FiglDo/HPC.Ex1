@@ -190,6 +190,8 @@ int Ex3::PerformScatter(string kernelName, OpenClContainer container, int amount
 
 	try
 	{
+		int outputSize = output.size();
+		int _sizeOutput = outputSize * sizeof(cl_int);
 		int sizeOfInput = input.size();
 		int _size = sizeOfInput * sizeof(cl_int);
 		int workGroupSplit = sizeOfInput / amountOfWorkGroups;
@@ -210,7 +212,7 @@ int Ex3::PerformScatter(string kernelName, OpenClContainer container, int amount
 		cl::Buffer bufferSource = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size);
 		cl::Buffer bufferSourceIndex = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size);
 		// output buffers
-		cl::Buffer bufferDest = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _size);
+		cl::Buffer bufferDest = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _sizeOutput);
 
 		// fill buffers
 		container.queue.enqueueWriteBuffer(
@@ -236,7 +238,7 @@ int Ex3::PerformScatter(string kernelName, OpenClContainer container, int amount
 		container.queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
 
 		// read back result
-		container.queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
+		container.queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _sizeOutput, &(output[0]));
 
 	}
 	catch (cl::Error err) {
@@ -276,26 +278,31 @@ void Ex3::PrintInputVsOutput2(vector<cl_int>& input, vector<cl_int>& output)
 
 	for (size_t i = 0; i < input.size(); i++)
 	{
-		std::cout << input[i] << std::endl;
+		std::cout << "INDEX: " << i << "     " << input[i] << std::endl;
 	}
 
 	std::cout << endl << endl << "Output: " << std::endl;
 
 	for (size_t i = 0; i < output.size(); i++)
 	{
-		std::cout << output[i] << std::endl;
+		std::cout << "INDEX: " << i << "     " << output[i] << std::endl;
 	}
-
-	std::cout << endl << endl << "Elements in Output: " << output.size() << std::endl;
-
 }
 
 
-int Ex3::Ex3_main(std::vector<cl_int> input)
+int Ex3::Ex3_main(std::vector<cl_int> unmodifiedInput)
 {
+	
+	vector<int> input(unmodifiedInput);
+	input.push_back(0); //push pack help value
+
+	cout << endl << "Starting Stream Compaction" << endl;
+	std::clock_t c_start = std::clock();
+	auto t_start = std::chrono::high_resolution_clock::now();
+
 	int sizeOfInput = input.size();
 	vector<cl_int> outputForFilter = vector<cl_int>(sizeOfInput);
-	int amountOfWorkGroups = 4;
+	int amountOfWorkGroups = 256;
 
 	int sizeOfSum = amountOfWorkGroups;
 	int _size_sum = sizeOfSum * sizeof(cl_int);
@@ -311,7 +318,7 @@ int Ex3::Ex3_main(std::vector<cl_int> input)
 	retVal = InitOpenCL(container);
 
 	//Filter
-	retVal = PerformFilter(kernelName, container, amountOfWorkGroups, input, outputForFilter, 1, 5);
+	retVal = PerformFilter(kernelName, container, amountOfWorkGroups, input, outputForFilter, 1, 20);
 
 	//PrintInputVsOutput(input, outputForFilter);
 
@@ -337,16 +344,27 @@ int Ex3::Ex3_main(std::vector<cl_int> input)
 
 	retVal = Ex2_simpleScan_more_wg::PerformAgg("scan_agg", container, amountOfWorkGroups, inputForAgg, outputAgg, outputForScanSum);
 
-	PrintInputVsOutput(inputForScan, outputAgg);
+	//PrintInputVsOutput(inputForScan, outputAgg);
 
 	/////////////////// </scan>
 	
-	vector<cl_int> outputScatter = vector<cl_int>(outputAgg[(outputAgg.size() - 1)] + 1);
-	//vector<cl_int> outputScatter = vector<cl_int>(input.size();	
+
+	vector<cl_int> outputScatter = vector<cl_int>(outputAgg[(outputAgg.size() - 1)]);
 	
 	retVal = PerformScatter("scatter", container, amountOfWorkGroups, input, outputScatter, outputAgg);
 	
-	PrintInputVsOutput2(input, outputScatter);
+	//PrintInputVsOutput2(unmodifiedInput, outputScatter);
+
+	std::cout << endl << endl << "Elements in Output: " << outputScatter.size() << std::endl;
+
+	std::clock_t c_end = std::clock();
+	auto t_end = std::chrono::high_resolution_clock::now();
+
+	std::cout << std::fixed << std::setprecision(2) << "CPU time used: "
+		<< 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms\n"
+		<< "Wall clock time passed: "
+		<< std::chrono::duration<double, std::milli>(t_end - t_start).count()
+		<< " ms\n";
 
 	return retVal;
 };

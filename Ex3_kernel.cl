@@ -78,7 +78,7 @@ __kernel void scatter(int *g_odata, int *g_idata, int * g_indexdata)
 
 	//printf("ThreadID: %d, groupId: %d, localId: %d, wgSize: %d maxSize: %d\n",thid, groupid,localid,wgsize,maxSize);
 	
-	if((thid) < maxSize)
+	if((thid) < (maxSize-1))
 	{
 		if(g_indexdata[thid] != g_indexdata[(thid+1)])
 		{
