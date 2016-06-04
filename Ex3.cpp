@@ -365,11 +365,22 @@ int Ex3::Ex3_main(std::vector<cl_int> unmodifiedInput, int amountOfWorkGroups, i
 
 	/////////////////// </scan>
 	
+	int sizeForOutputScatter = outputAgg[(outputAgg.size() - 1)]; //get the last element and reduce by one;
 
-	vector<cl_int> outputScatter = vector<cl_int>(outputAgg[(outputAgg.size() - 1)]);
-	
-	retVal = PerformScatter("scatter", container, amountOfWorkGroups, input, outputScatter, outputAgg);
-	
+	vector<cl_int> outputScatter;
+
+	if (sizeForOutputScatter > 0)
+	{
+		outputScatter = vector<cl_int>(sizeForOutputScatter);
+
+		retVal = PerformScatter("scatter", container, amountOfWorkGroups, input, outputScatter, outputAgg);
+
+	}
+	else
+	{
+		outputScatter = vector<cl_int>(0);
+	}
+
 	if (showOutput)
 		PrintInputVsOutput2(unmodifiedInput, outputScatter);
 

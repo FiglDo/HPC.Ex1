@@ -44,8 +44,6 @@ int main(void)
 	int value = 0;
 	srand(time(0));
 
-	//for (int i = 0; i < (1024 * 16); i++)
-	//for (int i = 0; i < inputVectorSize; i++)
 	for (int i = 0; i < inputVectorSize; i++)
 	{
 		value = rand() % 50;
