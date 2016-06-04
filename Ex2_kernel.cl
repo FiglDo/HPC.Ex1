@@ -53,7 +53,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 	
 	barrier(CLK_LOCAL_MEM_FENCE );
 
-
+	/*
 		if(thid == 5)
 		{
 		for(int i = 0; i < 16; i++)
@@ -62,6 +62,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 		}
 		printf("\n\n");
 		}
+	*/
 	
 
 
@@ -95,7 +96,6 @@ __kernel void scan_agg(int *g_odata, int *g_idata, int * sums, int sos)
 	int index = (int)( thid / (n/sos));
 
 	//printf("thid: %d, index: %d, sos: %d, calc: %d\n", thid, index, sos, sizeof(sums) / sizeof(sums[0]));
-
 
 	g_odata[thid] = g_idata[thid] + sums[index];
 }

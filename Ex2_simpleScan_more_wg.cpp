@@ -21,6 +21,9 @@
 #include <fstream>
 #include <ctime>
 
+#include <iomanip>
+#include <chrono>
+
 using namespace std;
 
 class OpenClContainer
@@ -129,20 +132,10 @@ int PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGr
 
 	try
 	{
-	
-
 	int sizeOfInput = input.size();
-
-	
-
-	//cl_int input[] = { 3, 1, 7, 0, 4, 1, 6, 3 };
-	//const int sizeOfInput = sizeof(input) / sizeof(input[0]);
-	//cl_int output[sizeOfInput] = {};
-
 	int _size = sizeOfInput * sizeof(cl_int);
 	int workGroupSplit = sizeOfInput / amountOfWorkGroups;
 
-	//int _size_temp = sizeOfInput * 20 * sizeof(cl_int);
 	int _size_temp = workGroupSplit * 2 * sizeof(cl_int);
 
 	// launch add kernel
@@ -184,13 +177,11 @@ int PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGr
 	cl::Kernel scanKernel(container.program, "scan_local", &err);
 	scanKernel.setArg(0, bufferDest);
 	scanKernel.setArg(1, bufferSource);
-	//scanKernel.setArg(2, bufferTemp);
 	scanKernel.setArg(2, _size_temp, NULL);
-	//rotateKernel.setArg(3, sizeOfInput);
 	scanKernel.setArg(3, bufferBSum);
 
 
-	std::cout << "call 'scan' kernel" << std::endl;
+	//std::cout << "call 'scan_local' kernel" << std::endl;
 	container.queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
 
 	// read back result
@@ -217,25 +208,23 @@ int PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGr
 	}
 
 	return EXIT_SUCCESS;
-
-
 }
 
 
-int PerformAgg(string kernelName, OpenClContainer container, vector<cl_int> input, vector<cl_int>& output, vector<cl_int> sum)
+int PerformAgg(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int> sum)
 {
 	cl_int err = CL_SUCCESS;
 
 	try
 	{
 		int sizeOfInput = input.size();
-
+		int workGroupSplit = sizeOfInput / amountOfWorkGroups;
 		int _size = sizeOfInput * sizeof(cl_int);
 
 		// launch add kernel
 		// Run the kernel on specific ND range
 		cl::NDRange global(sizeOfInput); //global => von bis ueber die ganze Range des Arrays
-		cl::NDRange local(sizeOfInput); //unterteilung des global in workgroups => make sure local range is divisible by global range
+		cl::NDRange local(workGroupSplit); //unterteilung des global in workgroups => make sure local range is divisible by global range
 		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
 
 
@@ -271,7 +260,7 @@ int PerformAgg(string kernelName, OpenClContainer container, vector<cl_int> inpu
 		scanKernel.setArg(3, sum.size());
 
 
-		std::cout << "call 'scan' kernel" << std::endl;
+		//std::cout << "call 'scan_agg' kernel" << std::endl;
 		container.queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
 
 		// read back result
@@ -303,7 +292,6 @@ int PerformAgg(string kernelName, OpenClContainer container, vector<cl_int> inpu
 
 void PrintInputVsOutput(vector<cl_int> input, vector<cl_int> output)
 {
-	//std::cout << std::endl << "RESULT:" << std::endl;
 	std::cout << endl << "INPUT vs. OUTPUT" << std::endl;
 
 	for (size_t i = 0; i < input.size(); i++)
@@ -323,45 +311,18 @@ void PrintBSum(vector<cl_int> sum)
 }
 
 
-int Ex2_simpleScan_more_wg::Ex2_main()
+int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input)
 {
-
-	//create input and output data
-
-	vector<cl_int> input = vector<cl_int>();
-	//input.push_back(1);
-	//input.push_back(1);
-	//input.push_back(1);
-	//input.push_back(1);
-	//input.push_back(1);
-	//input.push_back(1);
-	//input.push_back(1);
-	//input.push_back(1);
-
-	//input.push_back(3);
-	//input.push_back(1);
-	//input.push_back(7);
-	//input.push_back(0);
-	//input.push_back(4);
-	//input.push_back(1);
-	//input.push_back(6);
-	//input.push_back(3);
+	cout << endl << "Starting SimpleScan using more workgroups" << endl;
+	std::clock_t c_start = std::clock();
+	auto t_start = std::chrono::high_resolution_clock::now();
 
 	srand(time(0));
-	int target = 0;
-	int value = 0;
-	for (int i = 0; i < 2048; i++)
-	{
-		value = rand() % 50;
-		input.push_back(value);
-		target += value;
-	}
 	
-	target -= value;
 
 	int sizeOfInput = input.size();
 	vector<cl_int> output = vector<cl_int>(sizeOfInput);
-	int amountOfWorkGroups = 16;
+	int amountOfWorkGroups = 256;
 
 	int sizeOfSum = amountOfWorkGroups;
 	int _size_sum = sizeOfSum * sizeof(cl_int);
@@ -379,27 +340,33 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	//Scan 1
 	retVal = PerformScan(kernelName, container, amountOfWorkGroups, input, output, sum);
 
-	PrintInputVsOutput(input, output);
-	PrintBSum(sum);
+	//PrintInputVsOutput(input, output);
+	//PrintBSum(sum);
 
-	amountOfWorkGroups = 1;
 	vector<cl_int> sum2 = vector<cl_int>(sum.size());
 	vector<cl_int> output2 = vector<cl_int>(sum.size());
 	
-	cout << endl << endl;
-
 	//Scan 2
-	retVal = PerformScan(kernelName, container, amountOfWorkGroups, sum, output2, sum2);
+	retVal = PerformScan(kernelName, container, 1, sum, output2, sum2);
 
-	PrintInputVsOutput(sum, output2);
+	//PrintInputVsOutput(sum, output2);
 	//PrintBSum(sum2);
-	vector<cl_int> output3 = vector<cl_int>(sizeOfInput);
-	retVal = PerformAgg("scan_agg", container, output, output3, output2);
-	PrintInputVsOutput(input, output3);
-	
-	cout << endl << endl << "TARGET: " << target << endl;
 
-	cin.get();
+	vector<cl_int> output3 = vector<cl_int>(sizeOfInput);
+	retVal = PerformAgg("scan_agg", container, amountOfWorkGroups, output, output3, output2);
+	
+	//PrintInputVsOutput(input, output3);
+	
+	cout << "LAST: " << output3[sizeOfInput-1] << endl;
+
+	std::clock_t c_end = std::clock();
+	auto t_end = std::chrono::high_resolution_clock::now();
+
+	std::cout << std::fixed << std::setprecision(2) << "CPU time used: "
+		<< 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms\n"
+		<< "Wall clock time passed: "
+		<< std::chrono::duration<double, std::milli>(t_end - t_start).count()
+		<< " ms\n";
 
 	return retVal;
 }
