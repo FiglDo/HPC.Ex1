@@ -279,7 +279,7 @@ int Ex2_simpleScan_more_wg::PerformAgg(string kernelName, OpenClContainer contai
 
 }
 
-void PrintInputVsOutput(vector<cl_int> input, vector<cl_int> output)
+void Ex2_simpleScan_more_wg::PrintInputVsOutput(vector<cl_int> input, vector<cl_int> output)
 {
 	std::cout << endl << "INPUT vs. OUTPUT" << std::endl;
 
@@ -289,7 +289,7 @@ void PrintInputVsOutput(vector<cl_int> input, vector<cl_int> output)
 	}
 }
 
-void PrintBSum(vector<cl_int> sum)
+void Ex2_simpleScan_more_wg::PrintBSum(vector<cl_int> sum)
 {
 	std::cout << std::endl << std::endl << "Block Sums:" << endl;
 
@@ -300,7 +300,7 @@ void PrintBSum(vector<cl_int> sum)
 }
 
 
-int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input)
+int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input, int amountOfWorkGroups)
 {
 	cout << endl << "Starting SimpleScan using more workgroups" << endl;
 	std::clock_t c_start = std::clock();
@@ -308,7 +308,6 @@ int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input)
 
 	int sizeOfInput = input.size();
 	vector<cl_int> output = vector<cl_int>(sizeOfInput);
-	int amountOfWorkGroups = 256;
 
 	int sizeOfSum = amountOfWorkGroups;
 	int _size_sum = sizeOfSum * sizeof(cl_int);

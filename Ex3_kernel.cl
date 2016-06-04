@@ -68,6 +68,40 @@ short checkLower(short value, short compare)
 	return 0;
 }
 
+short checkEqual(short value, short compare)
+{
+    if(value == compare)
+		return 1;             
+
+	return 0;
+}
+
+short checkBigger(short value, short compare)
+{
+    if(value > compare)
+		return 1;             
+
+	return 0;
+}
+
+
+short checker(short type, short value, short compare)
+{ 
+	if(type == 0)
+		return checkLower(value,compare);
+	else if(type == 1)
+		return checkEqual(value,compare);
+	else if(type == 1)
+		return checkBigger(value,compare);
+}
+
+__kernel void filter(int *g_odata, int *g_idata, int predicateType, int predicateValue)
+{
+	int thid = get_global_id(0);
+
+	g_odata[thid] = (int)checker(predicateType,g_idata[thid],predicateValue);
+}
+
 __kernel void scatter(int *g_odata, int *g_idata, int * g_indexdata)
 {
 	int thid = get_global_id(0);
@@ -88,9 +122,3 @@ __kernel void scatter(int *g_odata, int *g_idata, int * g_indexdata)
 	}
 }
 
-__kernel void filter(int *g_odata, int *g_idata, int predicateType, int predicateValue)
-{
-	int thid = get_global_id(0);
-
-	g_odata[thid] = (int)checkLower(g_idata[thid],predicateValue);
-}

@@ -290,23 +290,58 @@ void Ex3::PrintInputVsOutput2(vector<cl_int>& input, vector<cl_int>& output)
 }
 
 
-int Ex3::Ex3_main(std::vector<cl_int> unmodifiedInput)
+int Ex3::PerformScan(int retVal, OpenClContainer container, int amountOfWorkGroups, int sizeOfInput, vector<cl_int> outputFromFilter, vector<cl_int>& outputAgg, int showOutput)
 {
+	int sizeOfSum = amountOfWorkGroups;
+	int _size_sum = sizeOfSum * sizeof(cl_int);
+	vector<cl_int> sum = vector<cl_int>(sizeOfSum);
+
+	vector<cl_int> inputForScan = outputFromFilter;
+	vector<cl_int> outputForScan = vector<cl_int>(sizeOfInput);
+
+
+	retVal = Ex2_simpleScan_more_wg::PerformScan("scan_local", container, amountOfWorkGroups, inputForScan, outputForScan, sum);
+
+	if (showOutput)
+		PrintInputVsOutput(inputForScan, outputForScan);
+
+	vector<cl_int> inputForScanSum = sum;
+	vector<cl_int> outputForScanSum = vector<cl_int>(sum.size());
+	vector<cl_int> unnecessarySums = vector<cl_int>(sum.size());
+
+	retVal = Ex2_simpleScan_more_wg::PerformScan("scan_local", container, 1, inputForScanSum, outputForScanSum, unnecessarySums);
 	
+	if (showOutput)
+		PrintInputVsOutput(inputForScanSum, outputForScanSum);
+
+	vector<cl_int> inputForAgg = outputForScan;
+	outputAgg = vector<cl_int>(inputForAgg.size());
+
+	retVal = Ex2_simpleScan_more_wg::PerformAgg("scan_agg", container, amountOfWorkGroups, inputForAgg, outputAgg, outputForScanSum);
+
+	if (showOutput)
+		PrintInputVsOutput(inputForScan, outputAgg);
+
+	return retVal;
+}
+
+
+int Ex3::Ex3_main(std::vector<cl_int> unmodifiedInput, int amountOfWorkGroups, int predicateType, int predicateValue, int showOutput, int showOutputScan)
+{
 	vector<int> input(unmodifiedInput);
 	input.push_back(0); //push pack help value
 
 	cout << endl << "Starting Stream Compaction" << endl;
+
+	cout << endl << "PredicateType (0:LT, 1:GT, 2: LT): " << predicateType << endl;
+	cout << endl << "PredicateValue: " << predicateValue << endl;
 	std::clock_t c_start = std::clock();
 	auto t_start = std::chrono::high_resolution_clock::now();
 
 	int sizeOfInput = input.size();
 	vector<cl_int> outputForFilter = vector<cl_int>(sizeOfInput);
-	int amountOfWorkGroups = 256;
 
-	int sizeOfSum = amountOfWorkGroups;
-	int _size_sum = sizeOfSum * sizeof(cl_int);
-	vector<cl_int> sum = vector<cl_int>(sizeOfSum);
+
 
 	string kernelName = "filter";
 
@@ -318,33 +353,15 @@ int Ex3::Ex3_main(std::vector<cl_int> unmodifiedInput)
 	retVal = InitOpenCL(container);
 
 	//Filter
-	retVal = PerformFilter(kernelName, container, amountOfWorkGroups, input, outputForFilter, 1, 20);
+	retVal = PerformFilter(kernelName, container, amountOfWorkGroups, input, outputForFilter, predicateType, predicateValue);
 
-	//PrintInputVsOutput(input, outputForFilter);
+	if (showOutput)
+		PrintInputVsOutput(input, outputForFilter);
 
 	/////////////////// <scan>
-	vector<cl_int> inputForScan = outputForFilter;
-	vector<cl_int> outputForScan = vector<cl_int>(sizeOfInput);
-
-
-	retVal = Ex2_simpleScan_more_wg::PerformScan("scan_local", container, amountOfWorkGroups, inputForScan, outputForScan, sum);
 	
-	//PrintInputVsOutput(inputForScan, outputForScan);
-
-	vector<cl_int> inputForScanSum = sum;
-	vector<cl_int> outputForScanSum = vector<cl_int>(sum.size());
-	vector<cl_int> unnecessarySums = vector<cl_int>(sum.size());
-
-	retVal = Ex2_simpleScan_more_wg::PerformScan("scan_local", container, 1, inputForScanSum, outputForScanSum, unnecessarySums);
-
-	//PrintInputVsOutput(inputForScanSum, outputForScanSum);
-
-	vector<cl_int> inputForAgg = outputForScan;
-	vector<cl_int> outputAgg = vector<cl_int>(inputForAgg.size());
-
-	retVal = Ex2_simpleScan_more_wg::PerformAgg("scan_agg", container, amountOfWorkGroups, inputForAgg, outputAgg, outputForScanSum);
-
-	//PrintInputVsOutput(inputForScan, outputAgg);
+	vector<cl_int> outputAgg;
+	retVal = PerformScan(retVal, container, amountOfWorkGroups, sizeOfInput, outputForFilter, outputAgg, showOutputScan);
 
 	/////////////////// </scan>
 	
@@ -353,7 +370,8 @@ int Ex3::Ex3_main(std::vector<cl_int> unmodifiedInput)
 	
 	retVal = PerformScatter("scatter", container, amountOfWorkGroups, input, outputScatter, outputAgg);
 	
-	//PrintInputVsOutput2(unmodifiedInput, outputScatter);
+	if (showOutput)
+		PrintInputVsOutput2(unmodifiedInput, outputScatter);
 
 	std::cout << endl << endl << "Elements in Output: " << outputScatter.size() << std::endl;
 

@@ -33,6 +33,11 @@ int main(void)
 	//input.push_back(6);
 	//input.push_back(3);
 
+	int inputVectorSize = 16 - 1;
+	int amountOfWorkGroups = 4;
+	int predicateType = 0; // 0 = LT; 1=EQ; 2 = GT
+	int predicateValue = 20;
+
 
 	int targetScan = 0;
 	int targetFilterCount = 0;
@@ -40,16 +45,34 @@ int main(void)
 	srand(time(0));
 
 	//for (int i = 0; i < (1024 * 16); i++)
-	for (int i = 0; i < (1024 * 16)-1; i++)
+	//for (int i = 0; i < inputVectorSize; i++)
+	for (int i = 0; i < inputVectorSize; i++)
 	{
 		value = rand() % 50;
 		input.push_back(value);
 		targetScan += value;
 
-		if (value < 20)
+		if (predicateType == 0)
 		{
-			targetFilterCount += 1;
+			if (value < predicateValue)
+			{
+				targetFilterCount += 1;
+			}
 		}
+		else if (predicateType == 1)
+		{
+			if (value == predicateValue)
+			{
+				targetFilterCount += 1;
+			}
+		}
+		else if (predicateType == 2)
+		{
+			if (value > predicateValue)
+			{
+				targetFilterCount += 1;
+			}
+		}		
 	}
 
 
@@ -57,19 +80,22 @@ int main(void)
 	
 	cout << "Processing " << input.size() << " Elements." << endl;
 
-	cout << "TARGET: " << targetScan << endl;
+	cout << "INPUT SIZE: " << input.size() << endl;
+	cout << "TARGET SUM SCAN: " << targetScan << endl;
 	cout << "TARGET FILTER COUNT : " << targetFilterCount << endl;
 	cout << endl << endl;
 
-
-	//Ex2_seq::Ex2_seq_main(input);
-
-
-	//Ex2_simpleScan_more_wg::Ex2_main(input);
-
-	Ex3::Ex3_main(input);
-
 	
+	//Ex2_seq::Ex2_seq_main(input);
+	//Ex2_simpleScan_more_wg::Ex2_main(input, amountOfWorkGroups);
+
+	Ex3::Ex3_main(input, amountOfWorkGroups, predicateType, predicateValue,1,0);
+
+	cout << endl << endl;
+
+	cout << "INPUT SIZE: " << input.size() << endl;
+	cout << "TARGET SUM SCAN: " << targetScan << endl;
+	cout << "TARGET FILTER COUNT : " << targetFilterCount << endl;
 
 	cin.get();
 
