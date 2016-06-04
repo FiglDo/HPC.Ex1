@@ -2,6 +2,7 @@
 #include "Ex2_simpleScan_one_wg.h"
 #include "Ex2_simpleScan_more_wg.h"
 #include "Ex2_seq.h"
+#include "Ex3.h"
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -33,29 +34,38 @@ int main(void)
 	//input.push_back(3);
 
 
-	int target = 0;
+	int targetScan = 0;
+	int targetFilterCount = 0;
 	int value = 0;
 	
-	for (int i = 0; i < (1024*16); i++)
+	//for (int i = 0; i < (1024 * 16); i++)
+	for (int i = 0; i < 64; i++)
 	{
-		value = rand() % 50;
+		value = rand() % 10;
 		input.push_back(value);
-		target += value;
+		targetScan += value;
+
+		if (value < 5)
+		{
+			targetFilterCount += 1;
+		}
 	}
 
-	target -= value;
+	targetScan -= value;
 	
 	cout << "Processing " << input.size() << " Elements." << endl;
 
-	cout << "TARGET: " << target << endl;
+	cout << "TARGET: " << targetScan << endl;
+	cout << "TARGET FILTER COUNT : " << targetFilterCount << endl;
 	cout << endl << endl;
 
 
-	Ex2_seq::Ex2_seq_main(input);
+	//Ex2_seq::Ex2_seq_main(input);
 
 
-	Ex2_simpleScan_more_wg::Ex2_main(input);
+	//Ex2_simpleScan_more_wg::Ex2_main(input);
 
+	Ex3::Ex3_main(input);
 
 	
 
