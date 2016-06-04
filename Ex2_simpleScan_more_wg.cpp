@@ -157,8 +157,7 @@ int PerformScan(string kernelName, OpenClContainer container, int workGroupSplit
 	cl::Buffer bufferSource = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size);
 	// output buffers
 	cl::Buffer bufferDest = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _size);
-	cl::Buffer bufferTemp = cl::Buffer(container.context, CL_MEM_READ_WRITE, _size_temp);  //fuer global
-	cl::Buffer bufferBSum = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _size_sum);
+	cl::Buffer bufferBSum = cl::Buffer(container.context, CL_MEM_READ_WRITE, _size_sum);
 
 	
 
@@ -170,6 +169,15 @@ int PerformScan(string kernelName, OpenClContainer container, int workGroupSplit
 		0, // offset
 		_size, // size of write 
 		&(input[0])); // pointer to input
+
+
+	// fill buffers
+	container.queue.enqueueWriteBuffer(
+		bufferBSum, // which buffer to write to
+		CL_TRUE, // block until command is complete
+		0, // offset
+		_size_sum, // size of write 
+		&(sum[0])); // pointer to input
 
 	cl::Kernel scanKernel(container.program, "scan_local", &err);
 	scanKernel.setArg(0, bufferDest);
@@ -340,9 +348,9 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	srand(time(0));
 	int target = 0;
 	int value = 0;
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 64; i++)
 	{
-		value = rand() % 2;
+		value = rand() % 50;
 		input.push_back(value);
 		target += value;
 	}
@@ -356,6 +364,11 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	int sizeOfSum = (sizeOfInput / workGroupSplit);
 	int _size_sum = sizeOfSum * sizeof(cl_int);
 	vector<cl_int> sum = vector<cl_int>(sizeOfSum);
+		
+	for (int i = 0; i < sizeOfSum; i++)
+	{
+		sum[i] = 0;
+	}	
 
 	string kernelName = "scan_local";
 

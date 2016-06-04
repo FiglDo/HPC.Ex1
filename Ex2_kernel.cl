@@ -94,7 +94,7 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 	
 
 
-		for (int offset = 1; offset < wgsize; offset *= 2)
+	for (int offset = 1; offset < wgsize; offset *= 2)
 	{  
 		pout = 1 - pout; // swap double buffer indices  
 		pin = 1 - pout; 
@@ -119,11 +119,11 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 
 	g_odata[thid] = temp[pout*wgsize + localid]; // write output 
 
-	if (localid == (wgsize - 1))
-	{
-		//printf("\n\tgroupid: %d, value: %d\n",groupid,temp[pout*n+thid]);
+	printf("thid: %d, localid: %d, wgsize: %d\n", thid, localid, wgsize);
 
-		bsum[groupid] = temp[pout*wgsize + localid] + g_idata[thid];
+	if((thid+1)%wgsize == 0)
+	{
+		bsum[groupid] = g_odata[thid] + g_idata[thid];
 	}
 }
 
