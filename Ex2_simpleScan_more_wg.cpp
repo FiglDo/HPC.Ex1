@@ -123,7 +123,7 @@ int InitOpenCL(OpenClContainer& container)
 }
 
 
-int PerformScan(string kernelName, OpenClContainer container, int workGroupSplit, vector<cl_int> input, vector<cl_int>& output, vector<cl_int>& sum)
+int PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int>& sum)
 {
 	cl_int err = CL_SUCCESS;
 
@@ -140,8 +140,10 @@ int PerformScan(string kernelName, OpenClContainer container, int workGroupSplit
 	//cl_int output[sizeOfInput] = {};
 
 	int _size = sizeOfInput * sizeof(cl_int);
+	int workGroupSplit = sizeOfInput / amountOfWorkGroups;
+
 	//int _size_temp = sizeOfInput * 20 * sizeof(cl_int);
-	int _size_temp = sizeOfInput / workGroupSplit * 2 * sizeof(cl_int);
+	int _size_temp = workGroupSplit * 2 * sizeof(cl_int);
 
 	// launch add kernel
 	// Run the kernel on specific ND range
@@ -348,7 +350,7 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	srand(time(0));
 	int target = 0;
 	int value = 0;
-	for (int i = 0; i < 64; i++)
+	for (int i = 0; i < 2048; i++)
 	{
 		value = rand() % 50;
 		input.push_back(value);
@@ -359,17 +361,12 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 
 	int sizeOfInput = input.size();
 	vector<cl_int> output = vector<cl_int>(sizeOfInput);
-	int workGroupSplit = 4;
+	int amountOfWorkGroups = 16;
 
-	int sizeOfSum = (sizeOfInput / workGroupSplit);
+	int sizeOfSum = amountOfWorkGroups;
 	int _size_sum = sizeOfSum * sizeof(cl_int);
 	vector<cl_int> sum = vector<cl_int>(sizeOfSum);
 		
-	for (int i = 0; i < sizeOfSum; i++)
-	{
-		sum[i] = 0;
-	}	
-
 	string kernelName = "scan_local";
 
 	OpenClContainer container;
@@ -380,19 +377,19 @@ int Ex2_simpleScan_more_wg::Ex2_main()
 	retVal = InitOpenCL(container);
 
 	//Scan 1
-	retVal = PerformScan(kernelName, container, workGroupSplit, input, output, sum);
+	retVal = PerformScan(kernelName, container, amountOfWorkGroups, input, output, sum);
 
 	PrintInputVsOutput(input, output);
 	PrintBSum(sum);
 
-	int workGroupSplit2 = sum.size();
+	amountOfWorkGroups = 1;
 	vector<cl_int> sum2 = vector<cl_int>(sum.size());
 	vector<cl_int> output2 = vector<cl_int>(sum.size());
 	
 	cout << endl << endl;
 
 	//Scan 2
-	retVal = PerformScan(kernelName, container, workGroupSplit2, sum, output2, sum2);
+	retVal = PerformScan(kernelName, container, amountOfWorkGroups, sum, output2, sum2);
 
 	PrintInputVsOutput(sum, output2);
 	//PrintBSum(sum2);

@@ -10,18 +10,9 @@ __kernel void scan_local1(int *g_odata, int *g_idata, __local int * temp)
 	int n = get_global_size(0);
 	int l = get_local_size(0);
 	
-	//printf("thid: %d, n:%d  ",thid,n);
-	//printf("lid: %d, l:%d\n",localid,l);
-	
-	printf("thid: %d, n:%d | lId: %d, lsize:%d | groupID: %d \n",thid,n,localid,l, groupid);
 	
 	int pout = 0, pin = 1;  
 	// Load input into shared memory.  
-	 // This is exclusive scan, so shift right by one  
-	 // and set first element to 0  
-	
-	//temp[thid] = 0;
-	//temp[n+thid] = 0;
 	
 	temp[pout*n+thid] = (localid > 0) ? g_idata[thid-1] : 0;  
 		
@@ -39,16 +30,6 @@ __kernel void scan_local1(int *g_odata, int *g_idata, __local int * temp)
 			temp[pout*n+thid] = temp[pin*n+thid];  
 		
 		barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE );
-		/*
-		if(thid == 5)
-		{ 
-			for(int i = 0; i < 16; i++)
-			{
-				printf("%d: %d | ",i,temp[i]);
-			}
-			printf("\n\n");
-		}
-		*/
 	}
 
 	g_odata[thid] = temp[pout*n+thid]; // write output 
@@ -65,19 +46,9 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 	int n = get_global_size(0);
 	int wgsize = get_local_size(0);
 	
-	//printf("thid: %d, n:%d  ",thid,n);
-	//printf("lid: %d, l:%d\n",localid,l);
-	
-	//printf("thid: %d, n:%d | lId: %d, lsize:%d | groupID: %d \n",thid,n,localid,l, groupid);
-	
 	int pout = 0, pin = 1;  
-	// Load input into shared memory.  
-	 // This is exclusive scan, so shift right by one  
-	 // and set first element to 0  
-	
-	//temp[thid] = 0;
-	//temp[n+thid] = 0;
-	
+
+	// Load input into shared memory.
 	temp[pout*wgsize + localid] = (localid > 0) ? g_idata[thid - 1] : 0;
 	
 	barrier(CLK_LOCAL_MEM_FENCE );
@@ -104,22 +75,12 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 		else  
 			temp[pout*wgsize + localid] = temp[pin*wgsize + localid];
 		
-		barrier(CLK_LOCAL_MEM_FENCE );
-		
-		/*if(thid == 5)
-		{ 
-			for(int i = 0; i < 16; i++)
-			{
-				printf("%d: %d | ",i,temp[i]);
-			}
-			printf("\n\n");
-		}*/
-		
+		barrier(CLK_LOCAL_MEM_FENCE );	
 	}
 
 	g_odata[thid] = temp[pout*wgsize + localid]; // write output 
 
-	printf("thid: %d, localid: %d, wgsize: %d\n", thid, localid, wgsize);
+	//printf("thid: %d, localid: %d, wgsize: %d\n", thid, localid, wgsize);
 
 	if((thid+1)%wgsize == 0)
 	{
@@ -131,10 +92,9 @@ __kernel void scan_agg(int *g_odata, int *g_idata, int * sums, int sos)
 {
 	int thid = get_global_id(0);
 	int n = get_global_size(0);
-	//int sos = sizeof(sums);// / sizeof(sums[0]);
 	int index = (int)( thid / (n/sos));
 
-	printf("thid: %d, index: %d, sos: %d, calc: %d\n", thid, index, sos, sizeof(sums) / sizeof(sums[0]));
+	//printf("thid: %d, index: %d, sos: %d, calc: %d\n", thid, index, sos, sizeof(sums) / sizeof(sums[0]));
 
 
 	g_odata[thid] = g_idata[thid] + sums[index];
