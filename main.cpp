@@ -2,6 +2,7 @@
 #include "Ex2_simpleScan_one_wg.h"
 #include "Ex2_simpleScan_more_wg.h"
 #include "Ex2_seq.h"
+#include "Ex2_WorkEfficient_Scan.h"
 #include "Ex3.h"
 #include <vector>
 #include <iostream>
@@ -33,8 +34,8 @@ int main(void)
 	//input.push_back(6);
 	//input.push_back(3);
 
-	int inputVectorSize = 16 - 1;
-	int amountOfWorkGroups = 4;
+	int inputVectorSize = 32;// -1;
+	int amountOfWorkGroups = 2;
 	int predicateType = 0; // 0 = LT; 1=EQ; 2 = GT
 	int predicateValue = 20;
 
@@ -44,9 +45,10 @@ int main(void)
 	int value = 0;
 	srand(time(0));
 
+	
 	for (int i = 0; i < inputVectorSize; i++)
 	{
-		value = rand() % 50;
+		value = rand() % 10;
 		input.push_back(value);
 		targetScan += value;
 
@@ -84,16 +86,25 @@ int main(void)
 	cout << endl << endl;
 
 	
+	
 	//Ex2_seq::Ex2_seq_main(input);
 	//Ex2_simpleScan_more_wg::Ex2_main(input, amountOfWorkGroups);
 
-	Ex3::Ex3_main(input, amountOfWorkGroups, predicateType, predicateValue,1,0);
+
+	
+	//Ex3::Ex3_main(input, amountOfWorkGroups, predicateType, predicateValue,1,0);
+
+
+	Ex2_WorkEfficient_Scan::Ex2_main(input, amountOfWorkGroups, 1);
+
 
 	cout << endl << endl;
 
 	cout << "INPUT SIZE: " << input.size() << endl;
 	cout << "TARGET SUM SCAN: " << targetScan << endl;
 	cout << "TARGET FILTER COUNT : " << targetFilterCount << endl;
+	
+
 
 	cin.get();
 

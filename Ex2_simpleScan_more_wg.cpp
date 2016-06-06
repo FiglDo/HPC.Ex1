@@ -163,7 +163,7 @@ int Ex2_simpleScan_more_wg::PerformScan(string kernelName, OpenClContainer conta
 		_size_sum, // size of write 
 		&(sum[0])); // pointer to input
 
-	cl::Kernel scanKernel(container.program, "scan_local", &err);
+	cl::Kernel scanKernel(container.program, kernelName.c_str(), &err);
 	scanKernel.setArg(0, bufferDest);
 	scanKernel.setArg(1, bufferSource);
 	scanKernel.setArg(2, _size_temp, NULL);
