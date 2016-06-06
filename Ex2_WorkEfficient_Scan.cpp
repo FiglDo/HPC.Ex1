@@ -109,7 +109,7 @@ int Ex2_WorkEfficient_Scan::InitOpenCL(OpenClContainer& container)
 
 }
 
-int Ex2_WorkEfficient_Scan::PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output)
+int Ex2_WorkEfficient_Scan::PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int>& sum)
 {
 	cl_int err = CL_SUCCESS;
 
@@ -119,7 +119,7 @@ int Ex2_WorkEfficient_Scan::PerformScan(string kernelName, OpenClContainer conta
 		int _size = sizeOfInput * sizeof(cl_int);
 		int workGroupSplit = sizeOfInput / amountOfWorkGroups;
 
-		int _size_temp = workGroupSplit * 2 * sizeof(cl_int);
+		int _size_temp = workGroupSplit * 32 * sizeof(cl_int);
 
 		// launch add kernel
 		// Run the kernel on specific ND range
@@ -127,12 +127,17 @@ int Ex2_WorkEfficient_Scan::PerformScan(string kernelName, OpenClContainer conta
 		cl::NDRange local(workGroupSplit); //unterteilung des global in workgroups => make sure local range is divisible by global range
 		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
 
+
+		int sizeOfSum = (sizeOfInput / (workGroupSplit/2));
+		int _size_sum = sizeOfSum * sizeof(cl_int);
+
+
 		// input buffers
 		cl::Buffer bufferSource = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size);
 		// output buffers
 		cl::Buffer bufferDest = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _size);
+		cl::Buffer bufferBSum = cl::Buffer(container.context, CL_MEM_READ_WRITE, _size_sum);
 		
-
 		// fill buffers
 		container.queue.enqueueWriteBuffer(
 			bufferSource, // which buffer to write to
@@ -141,19 +146,27 @@ int Ex2_WorkEfficient_Scan::PerformScan(string kernelName, OpenClContainer conta
 			_size, // size of write 
 			&(input[0])); // pointer to input
 
+		// fill buffers
+		container.queue.enqueueWriteBuffer(
+			bufferBSum, // which buffer to write to
+			CL_TRUE, // block until command is complete
+			0, // offset
+			_size_sum, // size of write 
+			&(sum[0])); // pointer to input
 
-		cl::Kernel scanKernel(container.program, kernelName.c_str(), &err);
+		cl::Kernel scanKernel(container.program, kernelName.c_str(), &err); //"scan_WE", &err);
 		scanKernel.setArg(0, bufferDest);
 		scanKernel.setArg(1, bufferSource);
 		scanKernel.setArg(2, _size_temp,NULL);
 		scanKernel.setArg(3, sizeOfInput);
-
+		scanKernel.setArg(4, bufferBSum);
 
 		//std::cout << "call 'scan_local' kernel" << std::endl;
 		container.queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
 
 		// read back result
 		container.queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
+		container.queue.enqueueReadBuffer(bufferBSum, CL_TRUE, 0, _size_sum, &(sum[0]));
 
 	}
 	catch (cl::Error err) {
@@ -187,6 +200,95 @@ void Ex2_WorkEfficient_Scan::PrintInputVsOutput(vector<cl_int> input, vector<cl_
 	}
 }
 
+void Ex2_WorkEfficient_Scan::PrintBSum(vector<cl_int> sum)
+{
+	std::cout << std::endl << std::endl << "Block Sums:" << endl;
+
+	for (size_t i = 0; i < sum.size(); i++)
+	{
+		std::cout << "    " << sum[i] << std::endl;
+	}
+}
+
+int Ex2_WorkEfficient_Scan::PerformAgg(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int> sum)
+{
+	cl_int err = CL_SUCCESS;
+
+	try
+	{
+		int sizeOfInput = input.size();
+		int workGroupSplit = sizeOfInput / amountOfWorkGroups;
+		int _size = sizeOfInput * sizeof(cl_int);
+
+		// launch add kernel
+		// Run the kernel on specific ND range
+		cl::NDRange global(sizeOfInput); //global => von bis ueber die ganze Range des Arrays
+		cl::NDRange local(workGroupSplit); //unterteilung des global in workgroups => make sure local range is divisible by global range
+		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
+
+
+		int sizeOfSum = sum.size();
+		int _size_sum = sizeOfSum * sizeof(cl_int);
+
+		// input buffers
+		cl::Buffer bufferSource = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size);
+		// output buffers
+		cl::Buffer bufferDest = cl::Buffer(container.context, CL_MEM_WRITE_ONLY, _size);
+		cl::Buffer bufferBSum = cl::Buffer(container.context, CL_MEM_READ_ONLY, _size_sum);
+
+		// fill buffers
+		container.queue.enqueueWriteBuffer(
+			bufferSource, // which buffer to write to
+			CL_TRUE, // block until command is complete
+			0, // offset
+			_size, // size of write 
+			&(input[0])); // pointer to input
+
+		container.queue.enqueueWriteBuffer(
+			bufferBSum, // which buffer to write to
+			CL_TRUE, // block until command is complete
+			0, // offset
+			_size_sum, // size of write 
+			&(sum[0])); // pointer to input
+
+
+		cl::Kernel scanKernel(container.program, "scan_agg", &err);
+		scanKernel.setArg(0, bufferDest);
+		scanKernel.setArg(1, bufferSource);
+		scanKernel.setArg(2, bufferBSum);
+		scanKernel.setArg(3, sum.size());
+
+
+		//std::cout << "call 'scan_agg' kernel" << std::endl;
+		container.queue.enqueueNDRangeKernel(scanKernel, offset, global, local);
+
+		// read back result
+		container.queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(output[0]));
+
+	}
+	catch (cl::Error err) {
+		// error handling
+		// if the kernel has failed to compile, print the error log
+		std::string s;
+		container.program.getBuildInfo(container.device, CL_PROGRAM_BUILD_LOG, &s);
+		std::cout << s << std::endl;
+		container.program.getBuildInfo(container.device, CL_PROGRAM_BUILD_OPTIONS, &s);
+		std::cout << s << std::endl;
+
+		std::cerr
+			<< "ERROR: "
+			<< err.what()
+			<< "("
+			<< err.err()
+			<< ")"
+			<< std::endl;
+	}
+
+	return EXIT_SUCCESS;
+
+
+}
+
 int Ex2_WorkEfficient_Scan::Ex2_main(std::vector<cl_int> input, int amountOfWorkGroups, int showOutput)
 {
 	cout << endl << "Starting work efficient scan" << endl;
@@ -194,7 +296,11 @@ int Ex2_WorkEfficient_Scan::Ex2_main(std::vector<cl_int> input, int amountOfWork
 	auto t_start = std::chrono::high_resolution_clock::now();
 
 	int sizeOfInput = input.size();
-	vector<cl_int> output = vector<cl_int>(sizeOfInput);
+	vector<cl_int> outputScan = vector<cl_int>(sizeOfInput);
+
+	int sizeOfSum = amountOfWorkGroups/2;
+	int _size_sum = sizeOfSum * sizeof(cl_int);
+	vector<cl_int> sum = vector<cl_int>(sizeOfSum);
 
 	string kernelName = "scan_WE";
 
@@ -206,12 +312,39 @@ int Ex2_WorkEfficient_Scan::Ex2_main(std::vector<cl_int> input, int amountOfWork
 	retVal = InitOpenCL(container);
 
 	//Scan 1
-	retVal = PerformScan(kernelName, container, amountOfWorkGroups, input, output);
+	retVal = PerformScan(kernelName, container, amountOfWorkGroups, input, outputScan, sum);
 
-	if (showOutput)
-		PrintInputVsOutput(input, output);
+	if (showOutput){
+		PrintInputVsOutput(input, outputScan);
+		PrintBSum(sum);
+	}
 
-	cout << "LAST: " << output[sizeOfInput - 1] << endl;
+
+	vector<cl_int> inputScanSums = sum;
+	vector<cl_int> outputScanSums = vector<cl_int>(inputScanSums.size());
+	vector<cl_int> sumScanSums = vector<cl_int>(inputScanSums.size());
+
+	//Scan 2 => over Sums
+	retVal = PerformScan(kernelName, container, 1, inputScanSums, outputScanSums, sumScanSums);
+
+	if (showOutput){
+		cout << endl << endl;
+		PrintInputVsOutput(inputScanSums, outputScanSums);
+	}
+	
+	//Aggregate
+	vector<cl_int> inputAgg = outputScan;
+	vector<cl_int> outputAgg = vector<cl_int>(inputAgg.size());
+	vector<cl_int> sumsAgg = outputScanSums;
+
+	retVal = PerformAgg("scan_agg", container, amountOfWorkGroups, inputAgg, outputAgg, sumsAgg);
+
+	if (showOutput){
+		cout << endl << endl;
+		PrintInputVsOutput(input, outputAgg);
+	}
+
+	cout << "LAST: " << outputAgg[sizeOfInput - 1] << endl;
 
 	std::clock_t c_end = std::clock();
 	auto t_end = std::chrono::high_resolution_clock::now();

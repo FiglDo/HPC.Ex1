@@ -64,8 +64,6 @@ __kernel void scan_local(int *g_odata, int *g_idata, __local int * temp, int * b
 		}
 	*/
 	
-
-
 	for (int offset = 1; offset < wgsize; offset *= 2)
 	{  
 		pout = 1 - pout; // swap double buffer indices  

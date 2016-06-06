@@ -34,12 +34,11 @@ int main(void)
 	//input.push_back(6);
 	//input.push_back(3);
 
-	int inputVectorSize = 32;// -1;
-	int amountOfWorkGroups = 2;
+	int inputVectorSize = 64;// -1;
+	int amountOfWorkGroups = 4;
 	int predicateType = 0; // 0 = LT; 1=EQ; 2 = GT
 	int predicateValue = 20;
-
-
+	
 	int targetScan = 0;
 	int targetFilterCount = 0;
 	int value = 0;
@@ -81,6 +80,7 @@ int main(void)
 	cout << "Processing " << input.size() << " Elements." << endl;
 
 	cout << "INPUT SIZE: " << input.size() << endl;
+	cout << "WORKGROUPS: " << amountOfWorkGroups << endl;
 	cout << "TARGET SUM SCAN: " << targetScan << endl;
 	cout << "TARGET FILTER COUNT : " << targetFilterCount << endl;
 	cout << endl << endl;

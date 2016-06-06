@@ -15,7 +15,9 @@ class Ex2_WorkEfficient_Scan
 public:
 	static int Ex2_main(std::vector<cl_int> input, int amountOfWorkGroups,int showOutput);
 	static int InitOpenCL(OpenClContainer& container);
-	static int PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output);
+	static int PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int>& sum);
 	static void PrintInputVsOutput(vector<cl_int> input, vector<cl_int> output);
+	static void PrintBSum(vector<cl_int> sum);
+	static int PerformAgg(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int> sum);
 };
 
