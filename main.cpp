@@ -4,6 +4,7 @@
 #include "Ex2_seq.h"
 #include "Ex2_WorkEfficient_Scan.h"
 #include "Ex3.h"
+#include "Ex3_seq.h"
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -34,8 +35,8 @@ int main(void)
 	//input.push_back(6);
 	//input.push_back(3);
 
-	int inputVectorSize = 64;// -1;
-	int amountOfWorkGroups = 4;
+	int inputVectorSize = 2097151;//
+	int amountOfWorkGroups = 1024;
 	int predicateType = 0; // 0 = LT; 1=EQ; 2 = GT
 	int predicateValue = 20;
 	
@@ -47,7 +48,7 @@ int main(void)
 	
 	for (int i = 0; i < inputVectorSize; i++)
 	{
-		value = rand() % 10;
+		value = rand() % 50;
 		input.push_back(value);
 		targetScan += value;
 
@@ -91,11 +92,11 @@ int main(void)
 	//Ex2_simpleScan_more_wg::Ex2_main(input, amountOfWorkGroups);
 
 
-	
-	//Ex3::Ex3_main(input, amountOfWorkGroups, predicateType, predicateValue,1,0);
+	Ex3_seq::Ex3_seq_main(input, predicateType, predicateValue);
 
+	Ex3::Ex3_main(input, amountOfWorkGroups, predicateType, predicateValue,0,0);
 
-	Ex2_WorkEfficient_Scan::Ex2_main(input, amountOfWorkGroups, 1);
+	//Ex2_WorkEfficient_Scan::Ex2_main(input, amountOfWorkGroups, 1);
 
 
 	cout << endl << endl;
