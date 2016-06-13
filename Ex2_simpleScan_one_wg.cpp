@@ -20,10 +20,20 @@
 #include <iostream>
 #include <fstream>
 
+#include <ctime>
+
+#include <iomanip>
+#include <chrono>
+
 using namespace std;
 
-int Ex2_simpleScan_one_wg::Ex2_main()
+int Ex2_simpleScan_one_wg::Ex2_main(vector<cl_int> input)
 {
+
+	cout << endl << "Starting SimpleScan using one workgroup" << endl;
+
+	std::clock_t c_start = std::clock();
+	auto t_start = std::chrono::high_resolution_clock::now();
 
 #if defined(__APPLE__) || defined(__MACOSX)
 	const std::string KERNEL_FILE = "./Ex2_kernel.cl";
@@ -81,18 +91,7 @@ int Ex2_simpleScan_one_wg::Ex2_main()
 
 		cl::CommandQueue queue(context, devices[0], 0, &err);
 
-		//create input and output data
 		
-		vector<cl_int> input = vector<cl_int>();
-		input.push_back(3);
-		input.push_back(1);
-		input.push_back(7);
-		input.push_back(0);
-		input.push_back(4);
-		input.push_back(1);
-		input.push_back(6);
-		input.push_back(3);
-
 		int sizeOfInput = input.size();
 
 		vector<cl_int> output = vector<cl_int>(sizeOfInput);
@@ -129,7 +128,7 @@ int Ex2_simpleScan_one_wg::Ex2_main()
 		// launch add kernel
 		// Run the kernel on specific ND range
 		cl::NDRange global(sizeOfInput); //global => von bis ueber die ganze Range des Arrays
-		cl::NDRange local(4); //unterteilung des global in workgroups => make sure local range is divisible by global range
+		cl::NDRange local(sizeOfInput); //unterteilung des global in workgroups => make sure local range is divisible by global range
 		cl::NDRange offset(0); //todo: offset auf workgroup Ebene?
 
 		std::cout << "call 'scan' kernel" << std::endl;
@@ -147,6 +146,15 @@ int Ex2_simpleScan_one_wg::Ex2_main()
 		{
 			std::cout << "    " << input[i] << "     " << output[i] << std::endl;
 		}
+
+		std::clock_t c_end = std::clock();
+		auto t_end = std::chrono::high_resolution_clock::now();
+
+		std::cout << std::fixed << std::setprecision(2) << "CPU time used: "
+			<< 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms\n"
+			<< "Wall clock time passed: "
+			<< std::chrono::duration<double, std::milli>(t_end - t_start).count()
+			<< " ms\n";
 
 	}
 	catch (cl::Error err) {
@@ -167,7 +175,6 @@ int Ex2_simpleScan_one_wg::Ex2_main()
 			<< std::endl;
 	}
 
-	cin.get();
 
 	return EXIT_SUCCESS;
 

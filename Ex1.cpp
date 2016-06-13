@@ -20,11 +20,12 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <sstream>
 
 #define PI 3.14159265
 
 
-int Ex1::Ex1_main()
+int Ex1::Ex1_main(double degree)
 {
 
 #if defined(__APPLE__) || defined(__MACOSX)
@@ -101,8 +102,8 @@ int Ex1::Ex1_main()
 		// output buffers
 		cl::Buffer bufferDest = cl::Buffer(context, CL_MEM_WRITE_ONLY, _size);
 
-		double degree;
-		degree = 33.0;
+		//double degree;
+		//degree = 33.0;
 
 		float sintheta = 0.0;
 		sintheta = sin(degree*PI / 180);
@@ -138,7 +139,14 @@ int Ex1::Ex1_main()
 		//queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &c[0]);
 		queue.enqueueReadBuffer(bufferDest, CL_TRUE, 0, _size, &(imgDest->imageData[0]));
 
-		tga::saveTGA(*imgDest, "test.tga");
+		//todo add degrees to filename
+		std::ostringstream strs;
+		strs << degree;
+		std::string str = strs.str();
+		std::string outputFilename = "lena_" + str + ".tga";
+		tga::saveTGA(*imgDest, outputFilename.c_str());
+
+		std::cout << std::endl << "Created '" + outputFilename + "'!";
 	}
 	catch (cl::Error err) {
 		// error handling
@@ -158,7 +166,6 @@ int Ex1::Ex1_main()
 			<< std::endl;
 	}
 
-	//std::cin.get();
 
 	return EXIT_SUCCESS;
 

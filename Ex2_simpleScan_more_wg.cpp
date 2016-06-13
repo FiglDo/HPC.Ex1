@@ -300,7 +300,7 @@ void Ex2_simpleScan_more_wg::PrintBSum(vector<cl_int> sum)
 }
 
 
-int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input, int amountOfWorkGroups)
+int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input, int amountOfWorkGroups, int showOutput)
 {
 	cout << endl << "Starting SimpleScan using more workgroups" << endl;
 	std::clock_t c_start = std::clock();
@@ -325,8 +325,11 @@ int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input, int amountOfWorkGroup
 	//Scan 1
 	retVal = PerformScan(kernelName, container, amountOfWorkGroups, input, output, sum);
 
-	//PrintInputVsOutput(input, output);
-	//PrintBSum(sum);
+	if (showOutput)
+	{
+		PrintInputVsOutput(input, output);
+		PrintBSum(sum);
+	}
 
 	vector<cl_int> sum2 = vector<cl_int>(sum.size());
 	vector<cl_int> output2 = vector<cl_int>(sum.size());
@@ -334,15 +337,21 @@ int Ex2_simpleScan_more_wg::Ex2_main(vector<cl_int> input, int amountOfWorkGroup
 	//Scan 2
 	retVal = PerformScan(kernelName, container, 1, sum, output2, sum2);
 
-	//PrintInputVsOutput(sum, output2);
-	//PrintBSum(sum2);
+	if (showOutput)
+	{
+		PrintInputVsOutput(sum, output2);
+		PrintBSum(sum2);
+	}
 
 	vector<cl_int> output3 = vector<cl_int>(sizeOfInput);
 	retVal = PerformAgg("scan_agg", container, amountOfWorkGroups, output, output3, output2);
 	
-	//PrintInputVsOutput(input, output3);
-	
-	cout << "LAST: " << output3[sizeOfInput-1] << endl;
+	if (showOutput)
+	{
+		PrintInputVsOutput(input, output3);
+	}
+
+	cout << endl << "LAST: " << output3[sizeOfInput-1] << endl;
 
 	std::clock_t c_end = std::clock();
 	auto t_end = std::chrono::high_resolution_clock::now();

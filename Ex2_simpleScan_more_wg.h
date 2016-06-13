@@ -13,7 +13,7 @@ using namespace std;
 class Ex2_simpleScan_more_wg
 {
 public:
-	static int Ex2_main(vector<cl_int> input, int amountOfWorkGroups);
+	static int Ex2_main(vector<cl_int> input, int amountOfWorkGroups, int showOutput);
 	static int PerformScan(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int>& sum);
 	static int PerformAgg(string kernelName, OpenClContainer container, int amountOfWorkGroups, vector<cl_int> input, vector<cl_int>& output, vector<cl_int> sum);
 	static int InitOpenCL(OpenClContainer& container);

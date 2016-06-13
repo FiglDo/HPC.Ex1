@@ -333,7 +333,7 @@ int Ex3::Ex3_main(std::vector<cl_int> unmodifiedInput, int amountOfWorkGroups, i
 
 	cout << endl << "Starting Stream Compaction" << endl;
 
-	cout << endl << "PredicateType (0:LT, 1:GT, 2: LT): " << predicateType << endl;
+	cout << endl << "PredicateType (0:LowerThan, 1 : Equal, 2 : GreaterThan): " << predicateType << endl;
 	cout << endl << "PredicateValue: " << predicateValue << endl;
 	std::clock_t c_start = std::clock();
 	auto t_start = std::chrono::high_resolution_clock::now();
